@@ -1,3 +1,5 @@
+this is a simple hacker news client app to learn the useage of rest api in pure react.
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
