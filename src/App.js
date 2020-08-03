@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useReducer } from 'react';
-import './App.css';
+import { Container, Row, InputGroup, FormControl, Card, Col } from 'react-bootstrap';
 
 //REST API 
 const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query=';
@@ -102,26 +102,37 @@ const App = () => {
   };
 
   return (
-    <div className="App">
-      <h1>My Hacker Stories</h1>
-      <InputWithLabel
-        id="search"
-        value={searchTerm}
-        onInputChange={handleSearch}
-      ><strong>Search</strong></InputWithLabel>
+    <Container className='mt-2'>
+      <Row className="justify-content-md-center">
+        <h1>My Hacker Stories</h1>
+      </Row>
 
-      <hr />
-      {stories.isError && <p>Something went wrong ...</p>}
+      <Row className='justify-content-md-center'>
+        <Col md={8}>
+          <InputWithLabel
+            id="search"
+            value={searchTerm}
+            onInputChange={handleSearch}
+          ><strong>Search</strong></InputWithLabel>
+        </Col>
+      </Row>
+      <Row className='justify-content-md-center mt-2' >
 
-      {
-        stories.isLoading ? (
-          <p>Loading...</p>
-        ) : (
-            <List list={stories.data} onRemoveItem={handleRemoveStory} />
-          )
-      }
+        {stories.isError && <p>Something went wrong ...</p>}
+        {
+          stories.isLoading ? (
+            <p>Loading...</p>
+          ) : (
+              <Col md={8}>
+                <List list={stories.data} onRemoveItem={handleRemoveStory} />
+              </Col>
+            )
+        }
 
-    </div>
+      </Row>
+
+    </Container>
+
   )
 }
 //custom reusable component just for sake of learning
@@ -133,40 +144,41 @@ const InputWithLabel = ({
   children
 }) => (
     <>
-      <label htmlFor={id}>{children}</label>
-      &nbsp;
-      <input
-        id={id}
-        type={type}
-        value={value}
-        onChange={onInputChange}
-      />
+      <label htmlFor={id}>{children}:</label>
+      <InputGroup>
+        <FormControl id={id} type={type} value={value} onChange={onInputChange} />
+      </InputGroup>
     </>
   );
 
 const List = ({ list, onRemoveItem }) =>
   list.map(item =>
+
     <Item
       key={item.objectID}
       item={item}
       onRemoveItem={onRemoveItem}
-    />);
+    />
+
+  );
 
 const Item = ({ item, onRemoveItem }) => {
   return (
-    <div>
-      <span>
-        <a href={item.url}>{item.title}</a>
-      </span>
-      <span>{item.author}</span>
-      <span>{item.num_comments}</span>
-      <span>{item.points}</span>
-      <span>
-        <button type="button" onClick={() => onRemoveItem(item)}>
-          Dismiss
-      </button>
-      </span>
-    </div>
+
+    <Card border='secondary' className='mb-1'>
+      <Card.Body>
+        <Card.Text>
+          <Card.Link href={item.url}>{item.title}</Card.Link><br />
+          <small>
+            {item.points} points by {item.author} | {item.num_comments} comments
+                            <sub>
+              <a href='/'><i onClick={(e) => { e.preventDefault(); onRemoveItem(item) }} className="material-icons">clear</i></a>
+            </sub>
+          </small>
+
+        </Card.Text>
+      </Card.Body>
+    </Card>
   );
 }
 
