@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useReducer } from 'react';
-import { Container, Row, InputGroup, FormControl, Card, Col } from 'react-bootstrap';
-
+import { Container, Row, InputGroup, FormControl, Card, Col, Dropdown } from 'react-bootstrap';
+import { sortBy } from 'lodash';
 //REST API 
 const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query=';
 
@@ -73,6 +73,7 @@ const useSemiPersistentState = (key, initialState) => {
 const App = () => {
   const [searchTerm, setSearchTerm] = useSemiPersistentState('search', 'react');
   const [stories, dispatchStories] = useReducer(storiesReducer, { data: [], isLoading: false, isError: false });
+  const [sort, setSort] = React.useState('NONE');
 
   useEffect(() => {
     if (!searchTerm) return;
@@ -100,6 +101,9 @@ const App = () => {
   const handleSearch = event => {
     setSearchTerm(event.target.value);
   };
+  const handleSort = sortKey => {
+    setSort(sortKey);
+  };
 
   return (
     <Container className='mt-2'>
@@ -108,12 +112,26 @@ const App = () => {
       </Row>
 
       <Row className='justify-content-md-center'>
-        <Col md={8}>
-          <InputWithLabel
+        <Col md={6}>
+          <InputReusable
             id="search"
             value={searchTerm}
             onInputChange={handleSearch}
-          ><strong>Search</strong></InputWithLabel>
+          >Search</InputReusable>
+        </Col>
+        <Col md={2}>
+          <Dropdown>
+            <Dropdown.Toggle variant="success" id="dropdown-basic">
+              sort by
+            </Dropdown.Toggle>
+
+            <Dropdown.Menu>
+              <Dropdown.Item href="#" onClick={() => handleSort('title')} >Title</Dropdown.Item>
+              <Dropdown.Item href="#" onClick={() => handleSort('author')} >Author</Dropdown.Item>
+              <Dropdown.Item href="#" onClick={() => handleSort('comments')} >Comment</Dropdown.Item>
+              <Dropdown.Item href="#" onClick={() => handleSort('points')}>Points</Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown>
         </Col>
       </Row>
       <Row className='justify-content-md-center mt-2' >
@@ -124,7 +142,7 @@ const App = () => {
             <p>Loading...</p>
           ) : (
               <Col md={8}>
-                <List list={stories.data} onRemoveItem={handleRemoveStory} />
+                <List list={stories.data} sort={sort} onRemoveItem={handleRemoveStory} />
               </Col>
             )
         }
@@ -136,7 +154,7 @@ const App = () => {
   )
 }
 //custom reusable component just for sake of learning
-const InputWithLabel = ({
+const InputReusable = ({
   id,
   value,
   type = 'text',
@@ -144,23 +162,36 @@ const InputWithLabel = ({
   children
 }) => (
     <>
-      <label htmlFor={id}>{children}:</label>
       <InputGroup>
-        <FormControl id={id} type={type} value={value} onChange={onInputChange} />
+        <FormControl placeholder={children} id={id} type={type} value={value} onChange={onInputChange} />
       </InputGroup>
     </>
   );
 
-const List = ({ list, onRemoveItem }) =>
-  list.map(item =>
+const List = ({ list, sort, onRemoveItem }) => {
+  const SORTS = {
+    NONE: list => list,
+    title: list => sortBy(list, 'title'),
+    author: list => sortBy(list, 'author'),
+    comments: list => sortBy(list, 'num_comments').reverse(),
+    points: list => sortBy(list, 'points').reverse(),
+  };
+  const sortFunction = SORTS[sort];
+  const sortedList = sortFunction(list);
 
-    <Item
-      key={item.objectID}
-      item={item}
-      onRemoveItem={onRemoveItem}
-    />
+  return (
+    sortedList.map(item =>
 
+      <Item
+        key={item.objectID}
+        item={item}
+        onRemoveItem={onRemoveItem}
+      />
+
+    )
   );
+}
+
 
 const Item = ({ item, onRemoveItem }) => {
   return (
